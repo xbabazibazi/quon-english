@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useStore, type Goal } from '../store'
 import { answer, finishTest, nextQuestion, startTest, TEST_LENGTH, type TestResult, type TestState } from '../engine/levelTest'
 import { Button, Callout, Option, Screen, TopBar } from '../components/ui'
+import { APP_LOGO, APP_NAME, APP_TAGLINE } from '../brand'
 
 const GOALS: { id: Goal; title: string; desc: string; icon: string }[] = [
   { id: 'work', title: 'İş için', desc: 'Toplantı, e-posta, müşteri', icon: '💼' },
@@ -23,16 +24,17 @@ export function Onboarding() {
     return (
       <Screen className="justify-center">
         <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand text-2xl font-bold text-white">10</div>
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand text-2xl font-bold text-white">{APP_LOGO}</div>
           <div>
-            <div className="text-2xl font-bold">Günde10</div>
-            <div className="text-sm text-muted">Günde 10 dakika İngilizce</div>
+            <div className="text-2xl font-bold">{APP_NAME}</div>
+            <div className="text-sm text-muted">{APP_TAGLINE}</div>
           </div>
         </div>
         <h1 className="text-3xl font-bold leading-tight">Türkler için yapılmış, tamamen ücretsiz İngilizce.</h1>
         <ul className="mt-5 space-y-3 text-base">
           <li className="flex gap-3"><span>❤️</span><span><b>Kalp yok, kilit yok.</b> Her ders, her gün açık.</span></li>
           <li className="flex gap-3"><span>🇹🇷</span><span><b>Hatalarını Türkçe anlatır.</b> "I am agree" neden yanlış, bir cümlede.</span></li>
+          <li className="flex gap-3"><span>🎧</span><span><b>A1'den B2'ye tam kurs.</b> Dilbilgisi, 3.000 kelime, dinleme, konuşma senaryoları.</span></li>
           <li className="flex gap-3"><span>📴</span><span><b>İnternetsiz çalışır.</b> Metroda, uçakta, her yerde.</span></li>
         </ul>
         <div className="flex-1" />
@@ -47,7 +49,7 @@ export function Onboarding() {
       <Screen>
         <TopBar title="1 / 3" left={<button className="text-brand" onClick={() => setStep('welcome')}>‹ Geri</button>} progress={0.33} />
         <h2 className="text-2xl font-bold">İngilizceyi ne için istiyorsun?</h2>
-        <p className="mt-1 text-muted">Ders örnekleri buna göre seçilir.</p>
+        <p className="mt-1 text-muted">Konuşma senaryoları buna göre öne çıkar.</p>
         <div className="mt-5 flex flex-col gap-2">
           {GOALS.map((g) => (
             <Option key={g.id} state={goal === g.id ? 'selected' : 'idle'} onClick={() => setGoal(g.id)}>
@@ -104,7 +106,7 @@ export function Onboarding() {
             Devam
           </Button>
         )}
-        <button className="mt-3 text-center text-sm text-muted" onClick={() => { setResult({ cefr: 'A1', sublevel: 'A1.1', score: { A1: 0, A2: 0, B1: 0 } }); setStep('result') }}>
+        <button className="mt-3 text-center text-sm text-muted" onClick={() => { setResult({ cefr: 'A1', sublevel: 'A1.1', score: { A1: 0, A2: 0, B1: 0, B2: 0 } }); setStep('result') }}>
           Testi atla, en baştan başla
         </button>
       </Screen>
@@ -112,7 +114,6 @@ export function Onboarding() {
   }
 
   const r = result!
-  const known = ['A1.1', 'A1.2'].includes(r.sublevel)
   return (
     <Screen>
       <TopBar title="3 / 3" progress={1} />
@@ -123,23 +124,20 @@ export function Onboarding() {
           {r.cefr === 'A1' && 'Başlangıç — temel kalıpları birlikte kuracağız.'}
           {r.cefr === 'A2' && 'Temel — günlük işleri hallediyorsun, şimdi akıcılık.'}
           {r.cefr === 'B1' && 'Orta — tanıdık konularda idare ediyorsun.'}
+          {r.cefr === 'B2' && 'Orta-üstü — karmaşık konularda akıcı konuşuyorsun, şimdi inceliği.'}
         </div>
       </div>
-      <div className="mt-6 grid grid-cols-3 gap-2 text-center text-sm">
-        {(['A1', 'A2', 'B1'] as const).map((l) => (
+      <div className="mt-6 grid grid-cols-4 gap-2 text-center text-sm">
+        {(['A1', 'A2', 'B1', 'B2'] as const).map((l) => (
           <div key={l} className="rounded-xl bg-white p-3 border border-slate-200">
             <div className="text-xs text-muted">{l}</div>
             <div className="font-bold">{r.score[l]} doğru</div>
           </div>
         ))}
       </div>
-      {!known && (
-        <div className="mt-4">
-          <Callout tone="info" title="Demo notu">Bu sürümde A1.1 ve A1.2 dersleri var. Seviyen daha yüksek; şimdilik bu dersleri pekiştirme olarak göreceksin, A1.3+ içerik sonraki paketle geliyor.</Callout>
-        </div>
-      )}
       <div className="flex-1" />
-      <Button onClick={() => complete({ goal, cefr: r.cefr, sublevel: r.sublevel, dailyGoal: 1, levelTestScore: r.score })}>İlk seansım hazır →</Button>
+      <p className="mb-3 text-center text-xs text-muted">Bu, yazılı bir testten yapılan kaba bir tahmin; dinleme ve konuşmayı ölçmez.</p>
+      <Button onClick={() => complete({ goal, cefr: r.cefr, sublevel: r.sublevel, levelTestScore: r.score })}>Başlayalım →</Button>
     </Screen>
   )
 }

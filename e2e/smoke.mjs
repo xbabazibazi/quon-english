@@ -19,7 +19,7 @@ const click = async (text) => { await page.getByRole('button', { name: text, exa
 
 try {
 await page.goto(BASE)
-await page.waitForSelector('text=Günde10')
+await page.waitForSelector('text=Başla')
 await shot('welcome')
 await click('Başla')
 await shot('goal')
@@ -27,9 +27,9 @@ await click('İş için')
 await click('Devam')
 await shot('level-test')
 
-// Seviye testi: 12 soru, hepsinde ilk şıkkı seç (karışık sonuç)
+// Seviye testi: soru bitene kadar karışık şık seç
 if (process.env.SKIP_TEST) await click('Testi atla')
-else for (let i = 0; i < 12; i++) {
+else for (let i = 0; i < 20 && !(await page.getByText('Tahmini seviyen').count()); i++) {
   const opts = page.locator('button.w-full.rounded-2xl.border-2')
   await opts.nth(i % 3).click()
   await click('Kontrol et')
@@ -37,18 +37,18 @@ else for (let i = 0; i < 12; i++) {
 }
 await page.waitForSelector('text=Tahmini seviyen')
 await shot('level-result')
-await click('İlk seansım hazır')
-await page.waitForSelector('text=Bugünkü seansın hazır')
+await click('Başlayalım')
+await page.waitForSelector('text=Derse başla')
 await shot('home')
-await click('Başla')
-await page.waitForSelector('text=Bugünün 5 kelimesi')
+await click('Derse başla')
+await page.waitForSelector('text=Bu dersin kelimeleri')
 await shot('lesson')
 await click('Alıştırmaya geç')
 
 // Alıştırmalar: tipine göre çöz (rastgele/ilk seçenek), akış ilerlesin yeter
 for (let guard = 0; guard < 30; guard++) {
   const title = (await page.locator('div.text-sm.font-semibold.uppercase').first().textContent()) ?? ''
-  if (title.includes('Günün sınavı')) break
+  if (title.includes('Sınav')) break
   if (title.includes('Eşleştir')) {
     // her sol şıkkı sırayla her sağ şıkla dene (deterministik brute force)
     const left = page.locator('div.grid.grid-cols-2 > div').nth(0).locator('button')
@@ -81,9 +81,9 @@ for (let guard = 0; guard < 30; guard++) {
 }
 await shot('quiz')
 
-// Günün sınavı: 5 soru — order: tüm kelimeleri sırayla seç; free: bilerek tipik Türk hatası yaz
+// Sınav: sonuç ekranına kadar — order: kelimeleri sırayla seç; free: bilerek tipik Türk hatası yaz
 const wrongFree = ['I tired', 'She is doctor', 'I no eat meat', 'She lives at Istanbul', 'They busy']
-for (let q = 0; q < 5; q++) {
+for (let q = 0; q < 12 && !(await page.getByText('Ana ekrana dön').count()); q++) {
   const input = page.locator('input[placeholder="İngilizce yaz…"]')
   if (await input.count()) {
     await input.fill(wrongFree[q % wrongFree.length])
@@ -99,8 +99,16 @@ for (let q = 0; q < 5; q++) {
 await page.waitForSelector('text=XP')
 await shot('result')
 await click('Ana ekrana dön')
-await page.waitForSelector('text=Günde10')
+await page.waitForSelector('text=Derse başla')
 await shot('home-after')
+
+// Yeni bölümler açılıyor mu?
+for (const [tile, marker] of [['Kelime', 'Yeni kelime öğren'], ['Okuma ve dinleme', 'Dinle, oku'], ['Konuşma senaryoları', 'Gerçek bir durumda']]) {
+  await click(tile)
+  await page.waitForSelector(`text=${marker}`)
+  await shot(tile)
+  await click('Geri')
+}
 
 // Hata haritası
 if (await page.getByText('Hata haritası').count()) {
@@ -110,9 +118,9 @@ if (await page.getByText('Hata haritası').count()) {
 
 // kalıcılık: yenile, hâlâ onboarded ve seans sayılmış mı?
 await page.reload()
-await page.waitForSelector('text=Günde10')
-const persisted = await page.evaluate(() => JSON.parse(localStorage.getItem('gunde10-v1') ?? '{}'))
-console.log('sessions:', persisted.state?.sessions?.length, 'xp:', persisted.state?.totalXp, 'streak:', persisted.state?.streak?.current, 'cards:', Object.keys(persisted.state?.cards ?? {}).length)
+await page.waitForSelector('text=Derse başla')
+const persisted = await page.evaluate(() => JSON.parse(localStorage.getItem('quon-english-v1') ?? '{}'))
+console.log('sessions:', persisted.state?.sessions?.length, 'xp:', persisted.state?.totalXp, 'cards:', Object.keys(persisted.state?.cards ?? {}).length)
 console.log('page errors:', errors.length ? errors : 'none')
 } catch (e) {
   await shot('ERROR')

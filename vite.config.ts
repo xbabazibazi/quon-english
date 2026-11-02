@@ -13,9 +13,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Günde10 — Günde 10 dakika İngilizce',
-        short_name: 'Günde10',
-        description: 'Türkler için tamamen ücretsiz, günde 10 dakikalık İngilizce uygulaması.',
+        name: 'QUON English — Türkler için İngilizce',
+        short_name: 'QUON English',
+        description: 'Türkler için tamamen ücretsiz, A1-B2 İngilizce kursu: dilbilgisi, kelime, dinleme, konuşma.',
         lang: 'tr',
         start_url: './',
         scope: './',
@@ -31,6 +31,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // içerik parçası (kelime, okuma, senaryo) 2 MB varsayılan sınırını aşabilir; çevrimdışı için önbelleğe girmeli
+        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
         navigateFallback: 'index.html',
       },
     }),

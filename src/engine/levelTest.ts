@@ -3,8 +3,8 @@ import type { Cefr, LevelQuestion } from '../content'
 import type { Sublevel } from '../store'
 import { shuffle } from './match'
 
-const LADDER: Cefr[] = ['A1', 'A2', 'B1']
-export const TEST_LENGTH = 12
+const LADDER: Cefr[] = ['A1', 'A2', 'B1', 'B2']
+export const TEST_LENGTH = 14
 
 export interface TestState {
   level: number // LADDER indeksi
@@ -49,15 +49,16 @@ export function answer(t: TestState, q: LevelQuestion, correct: boolean): TestSt
 export interface TestResult {
   cefr: Cefr
   sublevel: Sublevel
-  score: { A1: number; A2: number; B1: number }
+  score: { A1: number; A2: number; B1: number; B2: number }
 }
 
 /** Sonuç: her seviyedeki doğruluk oranına göre alt-seviye tahmini. */
 export function finishTest(t: TestState): TestResult {
   const ratio = (l: Cefr) => (t.askedBy[l] ? t.correctBy[l] / t.askedBy[l] : 0)
-  const score = { A1: t.correctBy.A1, A2: t.correctBy.A2, B1: t.correctBy.B1 }
-  if (t.askedBy.B1 >= 3 && ratio('B1') >= 0.6) return { cefr: 'B1', sublevel: 'B1.1', score }
-  if (t.askedBy.A2 >= 3 && ratio('A2') >= 0.6) return { cefr: 'A2', sublevel: ratio('A2') >= 0.85 ? 'A2.2' : 'A2.1', score }
+  const score = { A1: t.correctBy.A1, A2: t.correctBy.A2, B1: t.correctBy.B1, B2: t.correctBy.B2 }
+  if (t.askedBy.B2 >= 3 && ratio('B2') >= 0.6) return { cefr: 'B2', sublevel: 'B2.1', score }
+  if (t.askedBy.B1 >= 3 && ratio('B1') >= 0.6) return { cefr: 'B1', sublevel: ratio('B1') >= 0.85 ? 'B1.3' : 'B1.1', score }
+  if (t.askedBy.A2 >= 3 && ratio('A2') >= 0.6) return { cefr: 'A2', sublevel: ratio('A2') >= 0.85 ? 'A2.3' : 'A2.1', score }
   if (t.askedBy.A1 >= 3 && ratio('A1') >= 0.7) return { cefr: 'A1', sublevel: 'A1.3', score }
   if (t.askedBy.A1 >= 2 && ratio('A1') >= 0.5) return { cefr: 'A1', sublevel: 'A1.2', score }
   return { cefr: 'A1', sublevel: 'A1.1', score }

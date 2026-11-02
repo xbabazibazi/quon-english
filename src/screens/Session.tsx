@@ -2,31 +2,31 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ERROR_TAG_MAP } from '../content'
 import { buildPlan, type SessionPlan } from '../engine/planner'
 import { selectTopErrorTags, useStore, type ErrorEvent } from '../store'
+import { ADS_ENABLED, hasFeature } from '../billing'
 import { dateKey } from '../engine/dates'
 import { Button, Callout, Card, Screen, TopBar } from '../components/ui'
 import { ExerciseView, QuizQuestion } from '../components/exercises'
-import type { Grade } from '../engine/srs'
+import { SpeakBtn } from '../components/audio'
 
-type Step = 'warmup' | 'lesson' | 'exercise' | 'quiz' | 'feedback'
-const STEP_ORDER: Step[] = ['warmup', 'lesson', 'exercise', 'quiz', 'feedback']
-const STEP_TITLE: Record<Step, string> = { warmup: 'Isınma', lesson: 'Mikro ders', exercise: 'Alıştırma', quiz: 'Günün sınavı', feedback: 'Sonuç' }
+type Step = 'lesson' | 'exercise' | 'quiz' | 'feedback'
+const STEP_ORDER: Step[] = ['lesson', 'exercise', 'quiz', 'feedback']
+const STEP_TITLE: Record<Step, string> = { lesson: 'Ders', exercise: 'Alıştırma', quiz: 'Sınav', feedback: 'Sonuç' }
 
-const XP = { warmup: 10, lesson: 15, exercise: 15, quiz: 30, perfect: 10 }
+const XP = { lesson: 15, exercise: 15, quiz: 30, perfect: 10 }
 
-export function Session({ onExit, kind }: { onExit: () => void; kind: 'daily' | 'second' }) {
+export function Session({ onExit, onNext }: { onExit: () => void; onNext: () => void }) {
   const store = useStore()
   const plan: SessionPlan = useMemo(
     () =>
       buildPlan({
         skillMastery: store.skillMastery,
-        cards: store.cards,
         topErrorTags: selectTopErrorTags(store),
         learnedLessonIds: store.sessions.map((s) => s.lessonId),
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   )
-  const [step, setStep] = useState<Step>(plan.warmup.length ? 'warmup' : 'lesson')
+  const [step, setStep] = useState<Step>('lesson')
   const [i, setI] = useState(0)
   const [exCorrect, setExCorrect] = useState(0)
   const [quizCorrect, setQuizCorrect] = useState(0)
@@ -35,7 +35,7 @@ export function Session({ onExit, kind }: { onExit: () => void; kind: 'daily' | 
   const savedRef = useRef(false)
 
   const stepIdx = STEP_ORDER.indexOf(step)
-  const progress = (stepIdx + (step === 'exercise' ? i / plan.exercises.length : step === 'quiz' ? i / plan.quiz.length : step === 'warmup' ? i / Math.max(1, plan.warmup.length) : 0)) / STEP_ORDER.length
+  const progress = (stepIdx + (step === 'exercise' ? i / plan.exercises.length : step === 'quiz' ? i / plan.quiz.length : 0)) / STEP_ORDER.length
 
   // Sonuç ekranına gelince seansı bir kere kaydet (StrictMode'da bile tek sefer)
   useEffect(() => {
@@ -44,8 +44,8 @@ export function Session({ onExit, kind }: { onExit: () => void; kind: 'daily' | 
     const total = plan.exercises.length + plan.quiz.length
     const correct = exCorrect + quizCorrect
     const perfect = quizCorrect === plan.quiz.length
-    const xp = (plan.warmup.length ? XP.warmup : 0) + XP.lesson + XP.exercise + XP.quiz + (perfect ? XP.perfect : 0)
-    store.completeSession({ lessonId: plan.lesson.id, skillId: plan.skillId, xp, correct, total, errors, kind }, total ? correct / total : 0)
+    const xp = XP.lesson + XP.exercise + XP.quiz + (perfect ? XP.perfect : 0)
+    store.completeSession({ lessonId: plan.lesson.id, skillId: plan.skillId, xp, correct, total, errors }, total ? correct / total : 0)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step])
 
@@ -54,29 +54,7 @@ export function Session({ onExit, kind }: { onExit: () => void; kind: 'daily' | 
     setI(0)
   }
 
-  // ---- Isınma: SRS kartları
-  if (step === 'warmup') {
-    const card = plan.warmup[i]
-    return (
-      <Screen>
-        <TopBar title={`${STEP_TITLE.warmup} · ${i + 1}/${plan.warmup.length}`} left={<ExitBtn onExit={onExit} />} progress={progress} />
-        <Flashcard
-          key={card.id}
-          front={card.front}
-          back={card.back_tr}
-          example={card.example}
-          exampleTr={card.example_tr}
-          onGrade={(g) => {
-            store.reviewCard(card.id, g)
-            if (i + 1 < plan.warmup.length) setI(i + 1)
-            else next('lesson')
-          }}
-        />
-      </Screen>
-    )
-  }
-
-  // ---- Mikro ders
+  // ---- Ders
   if (step === 'lesson') {
     const l = plan.lesson
     return (
@@ -87,18 +65,22 @@ export function Session({ onExit, kind }: { onExit: () => void; kind: 'daily' | 
         <p className="mt-3 text-base leading-relaxed">{l.explanation_tr}</p>
         <div className="mt-4 flex flex-col gap-2">
           {l.examples.map((e) => (
-            <Card key={e.en} className="py-3">
-              <div className="text-lg font-semibold">{e.en}</div>
-              <div className="text-sm text-muted">{e.tr}</div>
+            <Card key={e.en} className="flex items-start gap-2 py-3">
+              <div className="flex-1">
+                <div className="text-lg font-semibold">{e.en}</div>
+                <div className="text-sm text-muted">{e.tr}</div>
+              </div>
+              <SpeakBtn text={e.en} />
             </Card>
           ))}
         </div>
-        <div className="mt-4 text-sm font-semibold uppercase tracking-wide text-muted">Bugünün 5 kelimesi</div>
+        <div className="mt-4 text-sm font-semibold uppercase tracking-wide text-muted">Bu dersin kelimeleri</div>
         <div className="mt-2 grid grid-cols-1 gap-1.5">
           {l.words.map((w) => (
-            <div key={w.en} className="flex items-baseline justify-between rounded-xl bg-white px-3 py-2 border border-slate-200">
-              <span className="font-semibold">{w.en}</span>
+            <div key={w.en} className="flex items-center gap-2 rounded-xl bg-white px-3 py-2 border border-slate-200">
+              <span className="flex-1 font-semibold">{w.en}</span>
               <span className="text-sm text-muted">{w.tr}</span>
+              <SpeakBtn text={w.en} />
             </div>
           ))}
         </div>
@@ -155,22 +137,19 @@ export function Session({ onExit, kind }: { onExit: () => void; kind: 'daily' | 
   const total = plan.exercises.length + plan.quiz.length
   const correct = exCorrect + quizCorrect
   const perfect = quizCorrect === plan.quiz.length
-  const xp = (plan.warmup.length ? XP.warmup : 0) + XP.lesson + XP.exercise + XP.quiz + (perfect ? XP.perfect : 0)
+  const xp = XP.lesson + XP.exercise + XP.quiz + (perfect ? XP.perfect : 0)
   const score = total ? correct / total : 0
-
-  const streak = store.streak
 
   return (
     <Screen>
       <TopBar title={STEP_TITLE.feedback} progress={1} />
       <div className="text-center">
         <div className="text-5xl">{perfect ? '🏆' : score >= 0.7 ? '🎉' : '💪'}</div>
-        <h2 className="mt-2 text-2xl font-bold">{perfect ? 'Kusursuz sınav!' : score >= 0.7 ? 'Seans tamam!' : 'Tamamlandı, yarın daha iyi'}</h2>
+        <h2 className="mt-2 text-2xl font-bold">{perfect ? 'Kusursuz sınav!' : score >= 0.7 ? 'Ders tamam!' : 'Tamamlandı, tekrar edince oturacak'}</h2>
         <div className="mt-1 text-muted">{correct} / {total} doğru</div>
       </div>
-      <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+      <div className="mt-5 grid grid-cols-2 gap-2 text-center">
         <Card className="py-3"><div className="text-2xl font-bold text-brand">+{xp}</div><div className="text-xs text-muted">XP</div></Card>
-        <Card className="py-3"><div className="text-2xl font-bold">🔥 {streak.current}</div><div className="text-xs text-muted">gün seri</div></Card>
         <Card className="py-3"><div className="text-2xl font-bold">{plan.lesson.words.length}</div><div className="text-xs text-muted">yeni kart</div></Card>
       </div>
 
@@ -206,10 +185,11 @@ export function Session({ onExit, kind }: { onExit: () => void; kind: 'daily' | 
         <AdSlot />
       </div>
       <div className="mt-4">
-        <Callout tone="info">Yarınki ısınma bugünün {plan.lesson.words.length} kelimesiyle başlayacak.{errors.length ? ` En sık hatan (${errors[0].tag}) sıradaki derslerde öne alınacak.` : ''}</Callout>
+        <Callout tone="info">Bu dersin {plan.lesson.words.length} kelimesi Kelime bölümündeki tekrar listene eklendi.{errors.length ? ` En sık hatan (${errors[0].tag}) sıradaki derslerde öne alınacak.` : ''}</Callout>
       </div>
-      <div className="mt-5">
-        <Button onClick={onExit}>Ana ekrana dön</Button>
+      <div className="mt-5 flex flex-col gap-2">
+        <Button onClick={onNext}>Sıradaki ders →</Button>
+        <Button variant="secondary" onClick={onExit}>Ana ekrana dön</Button>
       </div>
     </Screen>
   )
@@ -223,43 +203,13 @@ function ExitBtn({ onExit }: { onExit: () => void }) {
   )
 }
 
-/** Reklam alanı: sadece seans sonuç ekranında. Gerçek reklam kodu (AdSense/AdMob) buraya gelir. */
+/** Reklam alanı: sadece ders sonuç ekranında. Gerçek reklam kodu (AdSense/AdMob) bağlanana kadar görünmez. */
 function AdSlot() {
+  const entitlement = useStore((s) => s.entitlement)
+  if (!ADS_ENABLED || hasFeature(entitlement, 'no_ads')) return null
   return (
     <div className="flex h-24 items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 text-center text-xs text-muted">
-      Reklam alanı — sadece seans sonunda, ders sırasında asla
-    </div>
-  )
-}
-
-function Flashcard({ front, back, example, exampleTr, onGrade }: { front: string; back: string; example: string; exampleTr: string; onGrade: (g: Grade) => void }) {
-  const [flipped, setFlipped] = useState(false)
-  return (
-    <div className="flex flex-1 flex-col">
-      <div className="text-sm font-semibold uppercase tracking-wide text-muted">Hatırlıyor musun?</div>
-      <button type="button" onClick={() => setFlipped(true)} className="mt-3 flex min-h-56 flex-col items-center justify-center rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-sm">
-        <div className="text-3xl font-bold">{front}</div>
-        {flipped ? (
-          <div className="pop mt-4">
-            <div className="text-xl font-semibold text-brand">{back}</div>
-            <div className="mt-3 text-base">{example}</div>
-            <div className="text-sm text-muted">{exampleTr}</div>
-          </div>
-        ) : (
-          <div className="mt-4 text-sm text-muted">Cevabı görmek için dokun</div>
-        )}
-      </button>
-      <div className="flex-1" />
-      {flipped ? (
-        <div className="grid grid-cols-4 gap-2">
-          <Button variant="bad" onClick={() => onGrade('again')} className="px-2 text-sm">Bilmedim</Button>
-          <Button variant="secondary" onClick={() => onGrade('hard')} className="px-2 text-sm">Zor</Button>
-          <Button variant="secondary" onClick={() => onGrade('good')} className="px-2 text-sm">İyi</Button>
-          <Button variant="ok" onClick={() => onGrade('easy')} className="px-2 text-sm">Kolay</Button>
-        </div>
-      ) : (
-        <Button variant="secondary" onClick={() => setFlipped(true)}>Cevabı göster</Button>
-      )}
+      Reklam alanı — sadece ders sonunda, ders sırasında asla
     </div>
   )
 }

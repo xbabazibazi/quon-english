@@ -11,7 +11,7 @@ export function ErrorMap({ onBack }: { onBack: () => void }) {
   return (
     <Screen>
       <TopBar title="Hata haritası" left={<button className="text-brand" onClick={onBack}>‹ Geri</button>} />
-      <p className="text-sm text-muted">Türkçe konuşanların İngilizcede yaptığı 20 sistematik hata. Senin yaptıkların üstte; sıradaki dersler en sık hatanı öne alır.</p>
+      <p className="text-sm text-muted">Türkçe konuşanların İngilizcede yaptığı {ERROR_TAGS.length} sistematik hata. Senin yaptıkların üstte; sıradaki dersler en sık hatanı öne alır.</p>
       <div className="mt-4 flex flex-col gap-1.5">
         {rows.map((r) => (
           <div key={r.code} className="rounded-xl bg-white px-3 py-2 border border-slate-200">

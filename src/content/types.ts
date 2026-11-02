@@ -22,6 +22,37 @@ export type ErrorTag =
   | 'MUCH_MANY'
   | 'ING'
   | 'TIME'
+  | 'PRESCONT'
+  | 'HAVE_GOT'
+  | 'FREQ'
+  | 'WH'
+  | 'GOING_TO'
+  | 'COMP'
+  | 'SUPER'
+  | 'PASTCONT'
+  | 'HAVE_TO'
+  | 'OBJPRON'
+  | 'WILL'
+  | 'COND1'
+  | 'SHOULD'
+  | 'ADJORDER'
+  | 'QUANT'
+  | 'GERUND_INF'
+  | 'MODAL'
+  | 'PASTPERF'
+  | 'PASSIVE'
+  | 'REL'
+  | 'COND2'
+  | 'USEDTO'
+  | 'REPORTED'
+  | 'DEDUCTION'
+  | 'PHRASAL'
+  | 'TAGQ'
+  | 'ASAS'
+  | 'COND3'
+  | 'WISH'
+  | 'LINK'
+  | 'PERFMODAL'
 
 export interface ErrorTagDef {
   code: ErrorTag
@@ -81,6 +112,64 @@ export interface Lesson {
   words: Word[]
   exercises: Exercise[]
   quiz: QuizItem[]
+}
+
+export type Goal = 'work' | 'travel' | 'exam' | 'general'
+
+export interface VocabItem {
+  id: string
+  en: string
+  tr: string
+  pos: 'n' | 'v' | 'adj' | 'adv' | 'phr' | 'other'
+  cefr: Cefr
+  topic: string
+  example: string
+  example_tr: string
+  /** Türkçeden İngilizceye yazarken kabul edilen diğer doğru karşılıklar */
+  accepted?: string[]
+}
+
+export interface ReadingLine {
+  speaker?: string
+  en: string
+  tr: string
+}
+
+export interface Reading {
+  id: string
+  sublevel: string
+  kind: 'text' | 'dialogue'
+  title: string
+  title_tr: string
+  lines: ReadingLine[]
+  questions: { prompt_tr: string; options: string[]; answer: number }[]
+}
+
+export interface ScenarioReply {
+  en: string
+  tr: string
+  ok: boolean
+  /** ok=false ise neden uygun olmadığı; ok=true ise isteğe bağlı ipucu */
+  feedback_tr?: string
+  /** null = senaryo biter */
+  next: string | null
+}
+
+export interface ScenarioNode {
+  npc: string
+  npc_tr: string
+  replies: ScenarioReply[]
+}
+
+export interface Scenario {
+  id: string
+  goal: Goal
+  cefr: Cefr
+  title_tr: string
+  setting_tr: string
+  npc_name: string
+  start: string
+  nodes: Record<string, ScenarioNode>
 }
 
 export interface LevelQuestion {

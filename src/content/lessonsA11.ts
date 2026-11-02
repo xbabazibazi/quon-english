@@ -24,9 +24,13 @@ export const LESSONS_A11: Lesson[] = [
       { type: 'gap', sentence: 'I ___ a teacher.', options: ['am', 'is', 'are'], answer: 0 },
       { type: 'gap', sentence: 'They ___ from Ankara.', options: ['is', 'are', 'am'], answer: 1 },
       { type: 'gap', sentence: 'My mother ___ a doctor.', options: ['are', 'am', 'is'], answer: 2, explanation_tr: '"My mother" = she → is.' },
-      { type: 'match', pairs: [['I', 'am'], ['She', 'is'], ['We', 'are'], ['It', 'is']] },
+      { type: 'match', pairs: [['I', 'am'], ['She', 'is'], ['We', 'are']] },
       { type: 'mc', prompt: 'Hangisi doğru?', options: ['I engineer.', 'I am engineer.', 'I am an engineer.'], answer: 2, explanation_tr: 'Hem "am" hem "an" gerekli.' },
       { type: 'order', prompt_tr: 'Biz yorgunuz.', words: ['tired', 'are', 'We'], answer: 'We are tired' },
+      { type: 'gap', sentence: 'We ___ students.', options: ['am', 'is', 'are'], answer: 2 },
+      { type: 'gap', sentence: 'It ___ cold today.', options: ['is', 'are', 'am'], answer: 0 },
+      { type: 'mc', prompt: 'Hangisi doğru?', options: ['She is from Izmir.', 'She from Izmir.', 'She are from Izmir.'], answer: 0, explanation_tr: 'she → is; "is" atlanmaz.' },
+      { type: 'order', prompt_tr: 'Onlar evli.', words: ['are', 'They', 'married', 'is'], answer: 'They are married' },
     ],
     quiz: [
       {
@@ -69,6 +73,60 @@ export const LESSONS_A11: Lesson[] = [
           { text: 'Im tired', tag: 'TOBE', explanation_tr: 'Kısaltma kesme işaretiyle: I\'m tired.' },
         ],
       },
+      {
+        id: 'q_tobe_6', mode: 'order', prompt_tr: 'Biz meşgulüz.', answer_en: 'We are busy',
+        words: ['We', 'are', 'busy', 'is', 'am'],
+        error_variants: [
+          { text: 'We busy', tag: 'TOBE', explanation_tr: '"are" eksik: We are busy.' },
+          { text: 'We is busy', tag: 'TOBE', explanation_tr: 'We ile "are": We are busy.' },
+        ],
+      },
+      {
+        id: 'q_tobe_7', mode: 'free', prompt_tr: 'O (erkek) evli.', answer_en: 'He is married', accepted: ["He's married"],
+        error_variants: [
+          { text: 'He married', tag: 'TOBE', explanation_tr: '"is" eksik: He is married. ("He married" = "evlendi" demektir.)' },
+          { text: 'She is married', tag: 'GEN', explanation_tr: 'Erkek → he.' },
+        ],
+      },
+      {
+        id: 'q_tobe_8', mode: 'order', prompt_tr: 'Annem İzmirli.', answer_en: 'My mother is from Izmir',
+        words: ['My', 'mother', 'is', 'from', 'Izmir', 'are', 'in'],
+        error_variants: [
+          { text: 'My mother from Izmir', tag: 'TOBE', explanation_tr: '"is" eksik: My mother is from Izmir.' },
+          { text: 'My mother are from Izmir', tag: 'TOBE', explanation_tr: 'My mother = she → is.' },
+        ],
+      },
+      {
+        id: 'q_tobe_9', mode: 'free', prompt_tr: 'Sen öğrencisin.', answer_en: 'You are a student', accepted: ["You're a student"],
+        error_variants: [
+          { text: 'You a student', tag: 'TOBE', explanation_tr: '"are" eksik: You are a student.' },
+          { text: 'You are student', tag: 'ART', explanation_tr: 'Meslek/durum için "a": a student.' },
+          { text: 'You is a student', tag: 'TOBE', explanation_tr: 'you ile "are": You are a student.' },
+        ],
+      },
+      {
+        id: 'q_tobe_10', mode: 'order', prompt_tr: 'Bugün hava soğuk.', answer_en: 'It is cold today', accepted: ['Today it is cold'],
+        words: ['It', 'is', 'cold', 'today', 'are', 'am'],
+        error_variants: [
+          { text: 'It cold today', tag: 'TOBE', explanation_tr: '"is" eksik: It is cold today.' },
+          { text: 'It are cold today', tag: 'TOBE', explanation_tr: 'it ile "is": It is cold today.' },
+        ],
+      },
+      {
+        id: 'q_tobe_11', mode: 'free', prompt_tr: 'Ben Türküm.', answer_en: 'I am Turkish', accepted: ["I'm Turkish", 'I am a Turk', "I'm a Turk", 'I am from Turkey', "I'm from Turkey", 'I am from Türkiye', "I'm from Türkiye"],
+        error_variants: [
+          { text: 'I Turkish', tag: 'TOBE', explanation_tr: '"am" eksik: I am Turkish.' },
+          { text: 'I is Turkish', tag: 'TOBE', explanation_tr: 'I ile her zaman "am".' },
+        ],
+      },
+      {
+        id: 'q_tobe_12', mode: 'order', prompt_tr: 'Kız kardeşim ve ben öğrenciyiz.', answer_en: 'My sister and I are students',
+        words: ['My', 'sister', 'and', 'I', 'are', 'students', 'am', 'student'],
+        error_variants: [
+          { text: 'My sister and I am students', tag: 'TOBE', explanation_tr: '"Kız kardeşim ve ben" = biz → are.' },
+          { text: 'My sister and I are student', tag: 'PLURAL', explanation_tr: 'İki kişi → students.' },
+        ],
+      },
     ],
   },
   {
@@ -96,7 +154,11 @@ export const LESSONS_A11: Lesson[] = [
       { type: 'gap', sentence: '___ hour', options: ['a', 'an'], answer: 1, explanation_tr: '"hour" da h okunmaz, "auır" gibi: an hour.' },
       { type: 'gap', sentence: '___ university', options: ['a', 'an'], answer: 0, explanation_tr: '"university" "yu" sesiyle başlar: a university.' },
       { type: 'mc', prompt: 'Hangisi doğru?', options: ['She is nurse.', 'She is a nurse.', 'She is an nurse.'], answer: 1 },
-      { type: 'match', pairs: [['a', 'book'], ['an', 'egg'], ['a', 'house'], ['an', 'orange']] },
+      { type: 'match', pairs: [['a book', 'bir kitap'], ['an egg', 'bir yumurta'], ['a house', 'bir ev'], ['an orange', 'bir portakal']] },
+      { type: 'gap', sentence: '___ egg', options: ['a', 'an'], answer: 1 },
+      { type: 'gap', sentence: 'She is ___ engineer.', options: ['a', 'an'], answer: 1 },
+      { type: 'mc', prompt: 'Hangisi doğru?', options: ['I have a cars.', 'I have cars.', 'I have an cars.'], answer: 1, explanation_tr: 'Çoğulda a/an olmaz.' },
+      { type: 'order', prompt_tr: 'Bir elma ve bir muz.', words: ['An', 'apple', 'and', 'a', 'banana', 'an'], answer: 'An apple and a banana' },
     ],
     quiz: [
       {
@@ -140,6 +202,60 @@ export const LESSONS_A11: Lesson[] = [
           { text: 'My aunt nurse', tag: 'TOBE', explanation_tr: '"is" eksik.' },
         ],
       },
+      {
+        id: 'q_art_6', mode: 'order', prompt_tr: 'Bir yumurtam var.', answer_en: 'I have an egg',
+        words: ['I', 'have', 'an', 'egg', 'a'],
+        error_variants: [
+          { text: 'I have a egg', tag: 'ART', explanation_tr: 'Sesli sesle başlıyor: an egg.' },
+          { text: 'I have egg', tag: 'ART', explanation_tr: 'Tekil sayılabilir isim: an egg.' },
+        ],
+      },
+      {
+        id: 'q_art_7', mode: 'free', prompt_tr: 'O (kadın) mühendis.', answer_en: 'She is an engineer', accepted: ["She's an engineer"],
+        error_variants: [
+          { text: 'She is a engineer', tag: 'ART', explanation_tr: 'Sesli sesle başlıyor: an engineer.' },
+          { text: 'She is engineer', tag: 'ART', explanation_tr: 'Meslekten önce "an": an engineer.' },
+          { text: 'He is an engineer', tag: 'GEN', explanation_tr: 'Kadın → she.' },
+        ],
+      },
+      {
+        id: 'q_art_8', mode: 'order', prompt_tr: 'Bu bir üniversite.', answer_en: 'This is a university',
+        words: ['This', 'is', 'a', 'university', 'an'],
+        error_variants: [
+          { text: 'This is an university', tag: 'ART', explanation_tr: '"university" "yu" sesiyle başlar: a university.' },
+          { text: 'This is university', tag: 'ART', explanation_tr: '"a" gerekli: a university.' },
+        ],
+      },
+      {
+        id: 'q_art_9', mode: 'free', prompt_tr: 'Babam şoför.', answer_en: 'My father is a driver', accepted: ["My father's a driver"],
+        error_variants: [
+          { text: 'My father is driver', tag: 'ART', explanation_tr: 'Meslekten önce "a": a driver.' },
+          { text: 'My father driver', tag: 'TOBE', explanation_tr: '"is" ve "a" eksik: My father is a driver.' },
+        ],
+      },
+      {
+        id: 'q_art_10', mode: 'order', prompt_tr: 'Bir şemsiye ve bir çanta.', answer_en: 'An umbrella and a bag',
+        words: ['An', 'umbrella', 'and', 'a', 'bag', 'A'],
+        error_variants: [
+          { text: 'A umbrella and a bag', tag: 'ART', explanation_tr: 'Sesli sesle başlıyor: an umbrella.' },
+          { text: 'An umbrella and an bag', tag: 'ART', explanation_tr: '"bag" sessizle başlar: a bag.' },
+        ],
+      },
+      {
+        id: 'q_art_11', mode: 'free', prompt_tr: 'Bu bir portakal.', answer_en: 'This is an orange', accepted: ['It is an orange', "It's an orange"],
+        error_variants: [
+          { text: 'This is a orange', tag: 'ART', explanation_tr: 'Sesli sesle başlıyor: an orange.' },
+          { text: 'This is orange', tag: 'ART', explanation_tr: '"an" gerekli: an orange. ("This is orange" = "Bu turuncu" olur.)' },
+        ],
+      },
+      {
+        id: 'q_art_12', mode: 'order', prompt_tr: 'Erkek kardeşim öğretmen.', answer_en: 'My brother is a teacher',
+        words: ['My', 'brother', 'is', 'a', 'teacher', 'an'],
+        error_variants: [
+          { text: 'My brother is an teacher', tag: 'ART', explanation_tr: '"teacher" sessizle başlar: a teacher.' },
+          { text: 'My brother is teacher', tag: 'ART', explanation_tr: 'Meslekten önce "a": a teacher.' },
+        ],
+      },
     ],
   },
   {
@@ -168,6 +284,10 @@ export const LESSONS_A11: Lesson[] = [
       { type: 'match', pairs: [['my mother', 'she'], ['my brother', 'he'], ['the table', 'it'], ['my parents', 'they']] },
       { type: 'mc', prompt: '"Kedi" için hangi zamir?', options: ['he', 'she', 'it'], answer: 2, explanation_tr: 'Hayvanlar genelde "it".' },
       { type: 'order', prompt_tr: 'O (erkek) benim arkadaşım.', words: ['friend', 'is', 'He', 'my'], answer: 'He is my friend' },
+      { type: 'gap', sentence: 'My grandmother is 80. ___ is very old.', options: ['He', 'She', 'It'], answer: 1 },
+      { type: 'gap', sentence: 'This is my bag. ___ is small.', options: ['He', 'She', 'It'], answer: 2 },
+      { type: 'gap', sentence: 'My parents are teachers. ___ are in Ankara.', options: ['He', 'They', 'It'], answer: 1 },
+      { type: 'order', prompt_tr: 'O (kadın) benim arkadaşım.', words: ['She', 'is', 'my', 'friend', 'He'], answer: 'She is my friend' },
     ],
     quiz: [
       {
@@ -210,6 +330,60 @@ export const LESSONS_A11: Lesson[] = [
           { text: 'They students', tag: 'TOBE', explanation_tr: '"are" eksik.' },
         ],
       },
+      {
+        id: 'q_pron_6', mode: 'order', prompt_tr: 'Babam şoför. O 50 yaşında.', answer_en: 'My father is a driver. He is 50',
+        words: ['My', 'father', 'is', 'a', 'driver.', 'He', 'is', '50', 'She'],
+        error_variants: [
+          { text: 'My father is a driver. She is 50', tag: 'GEN', explanation_tr: 'Baba erkek → he.' },
+          { text: 'My father is driver. He is 50', tag: 'ART', explanation_tr: 'a driver.' },
+        ],
+      },
+      {
+        id: 'q_pron_7', mode: 'free', prompt_tr: 'Bu benim arabam. O kırmızı.', answer_en: 'This is my car. It is red', accepted: ["This is my car. It's red"],
+        error_variants: [
+          { text: 'This is my car. He is red', tag: 'GEN', explanation_tr: 'Nesne için "it".' },
+          { text: 'This is my car. She is red', tag: 'GEN', explanation_tr: 'Nesne için "it".' },
+          { text: 'This is my car. It red', tag: 'TOBE', explanation_tr: '"is" eksik: It is red.' },
+        ],
+      },
+      {
+        id: 'q_pron_8', mode: 'order', prompt_tr: 'Ayşe hemşire. O evli.', answer_en: 'Ayşe is a nurse. She is married',
+        words: ['Ayşe', 'is', 'a', 'nurse.', 'She', 'is', 'married', 'He'],
+        error_variants: [
+          { text: 'Ayşe is a nurse. He is married', tag: 'GEN', explanation_tr: 'Ayşe kadın → she.' },
+          { text: 'Ayşe is nurse. She is married', tag: 'ART', explanation_tr: 'a nurse.' },
+        ],
+      },
+      {
+        id: 'q_pron_9', mode: 'free', prompt_tr: 'Annemle babam İzmir\'de. Onlar mutlu.', answer_en: 'My parents are in Izmir. They are happy', accepted: ["My parents are in Izmir. They're happy", 'My mother and father are in Izmir. They are happy', "My mother and father are in Izmir. They're happy", 'My mom and dad are in Izmir. They are happy', "My mom and dad are in Izmir. They're happy"],
+        error_variants: [
+          { text: 'My parents is in Izmir. They are happy', tag: 'TOBE', explanation_tr: 'Çoğul özne + are.' },
+          { text: 'My parents are in Izmir. He is happy', tag: 'GEN', explanation_tr: '"Onlar" = they.' },
+        ],
+      },
+      {
+        id: 'q_pron_10', mode: 'order', prompt_tr: 'O (erkek) yorgun.', answer_en: 'He is tired',
+        words: ['He', 'is', 'tired', 'She', 'are'],
+        error_variants: [
+          { text: 'She is tired', tag: 'GEN', explanation_tr: 'Erkek → he.' },
+          { text: 'He tired', tag: 'TOBE', explanation_tr: '"is" eksik: He is tired.' },
+        ],
+      },
+      {
+        id: 'q_pron_11', mode: 'free', prompt_tr: 'Ali ve Elif benim arkadaşlarım. Onlar öğrenci.', answer_en: 'Ali and Elif are my friends. They are students', accepted: ["Ali and Elif are my friends. They're students"],
+        error_variants: [
+          { text: 'Ali and Elif are my friends. They are student', tag: 'PLURAL', explanation_tr: 'Onlar → çoğul: students.' },
+          { text: 'Ali and Elif is my friends. They are students', tag: 'TOBE', explanation_tr: 'İki kişi → are.' },
+        ],
+      },
+      {
+        id: 'q_pron_12', mode: 'order', prompt_tr: 'Telefonum eski. O yavaş.', answer_en: 'My phone is old. It is slow',
+        words: ['My', 'phone', 'is', 'old.', 'It', 'is', 'slow', 'He'],
+        error_variants: [
+          { text: 'My phone is old. He is slow', tag: 'GEN', explanation_tr: 'Nesne için "it".' },
+          { text: 'My phone is old. It slow', tag: 'TOBE', explanation_tr: '"is" eksik: It is slow.' },
+        ],
+      },
     ],
   },
   {
@@ -238,6 +412,10 @@ export const LESSONS_A11: Lesson[] = [
       { type: 'match', pairs: [['man', 'men'], ['city', 'cities'], ['watch', 'watches'], ['book', 'books']] },
       { type: 'mc', prompt: 'Hangisi doğru?', options: ['I have two brother.', 'I have two brothers.', 'I have a two brothers.'], answer: 1 },
       { type: 'order', prompt_tr: 'Büyük şehirler.', words: ['cities', 'Big', 'city'], answer: 'Big cities' },
+      { type: 'gap', sentence: 'four ___', options: ['box', 'boxes', 'boxs'], answer: 1, explanation_tr: '-x ile bitenler -es alır: boxes.' },
+      { type: 'gap', sentence: 'two ___', options: ['woman', 'women', 'womans'], answer: 1, explanation_tr: 'Düzensiz: woman → women.' },
+      { type: 'mc', prompt: 'Hangisi doğru?', options: ['two citys', 'two cities', 'two city'], answer: 1, explanation_tr: 'Sessiz + y → -ies.' },
+      { type: 'order', prompt_tr: 'İki kadın ve üç adam.', words: ['Two', 'women', 'and', 'three', 'men', 'woman', 'mans'], answer: 'Two women and three men' },
     ],
     quiz: [
       {
@@ -280,6 +458,60 @@ export const LESSONS_A11: Lesson[] = [
           { text: 'Two men and woman', tag: 'ART', explanation_tr: 'a woman.' },
         ],
       },
+      {
+        id: 'q_pl_6', mode: 'order', prompt_tr: 'Üç kedim var.', answer_en: 'I have three cats',
+        words: ['I', 'have', 'three', 'cats', 'cat', 'a'],
+        error_variants: [
+          { text: 'I have three cat', tag: 'PLURAL', explanation_tr: 'Sayıdan sonra çoğul: three cats.' },
+          { text: 'I have a three cats', tag: 'ART', explanation_tr: 'Çoğulda "a" olmaz.' },
+        ],
+      },
+      {
+        id: 'q_pl_7', mode: 'free', prompt_tr: 'İki otobüs ve bir taksi.', answer_en: 'Two buses and a taxi',
+        error_variants: [
+          { text: 'Two bus and a taxi', tag: 'PLURAL', explanation_tr: 'Sayıdan sonra çoğul: two buses.' },
+          { text: 'Two buss and a taxi', tag: 'PLURAL', explanation_tr: '-s ile bitenler -es alır: buses.' },
+          { text: 'Two buses and taxi', tag: 'ART', explanation_tr: 'Tekil: a taxi.' },
+        ],
+      },
+      {
+        id: 'q_pl_8', mode: 'order', prompt_tr: 'Şehirler büyük.', answer_en: 'The cities are big',
+        words: ['The', 'cities', 'are', 'big', 'citys', 'is'],
+        error_variants: [
+          { text: 'The citys are big', tag: 'PLURAL', explanation_tr: 'Sessiz + y → -ies: cities.' },
+          { text: 'The cities is big', tag: 'TOBE', explanation_tr: 'Çoğul özne + are.' },
+        ],
+      },
+      {
+        id: 'q_pl_9', mode: 'free', prompt_tr: 'Beş kitabım var.', answer_en: 'I have five books',
+        error_variants: [
+          { text: 'I have five book', tag: 'PLURAL', explanation_tr: 'Sayıdan sonra çoğul: five books.' },
+          { text: 'I five books have', tag: 'WORD_ORDER', explanation_tr: 'Fiil ortada: I have five books.' },
+        ],
+      },
+      {
+        id: 'q_pl_10', mode: 'order', prompt_tr: 'İki çocuk ve bir kadın.', answer_en: 'Two children and a woman',
+        words: ['Two', 'children', 'and', 'a', 'woman', 'childs', 'women'],
+        error_variants: [
+          { text: 'Two childs and a woman', tag: 'PLURAL', explanation_tr: 'Düzensiz çoğul: children.' },
+          { text: 'Two children and a women', tag: 'PLURAL', explanation_tr: 'Tekil kadın: woman.' },
+        ],
+      },
+      {
+        id: 'q_pl_11', mode: 'free', prompt_tr: 'Üç arkadaşım var.', answer_en: 'I have three friends',
+        error_variants: [
+          { text: 'I have three friend', tag: 'PLURAL', explanation_tr: 'Sayıdan sonra çoğul: three friends.' },
+          { text: 'I have a three friends', tag: 'ART', explanation_tr: 'Çoğulda "a" olmaz.' },
+        ],
+      },
+      {
+        id: 'q_pl_12', mode: 'order', prompt_tr: 'Kızlar öğrenci.', answer_en: 'The girls are students',
+        words: ['The', 'girls', 'are', 'students', 'student', 'is'],
+        error_variants: [
+          { text: 'The girls are student', tag: 'PLURAL', explanation_tr: 'Çoğul özne → students.' },
+          { text: 'The girls is students', tag: 'TOBE', explanation_tr: 'Çoğul özne + are.' },
+        ],
+      },
     ],
   },
   {
@@ -308,6 +540,10 @@ export const LESSONS_A11: Lesson[] = [
       { type: 'match', pairs: [['I', 'my'], ['he', 'his'], ['she', 'her'], ['they', 'their']] },
       { type: 'mc', prompt: '"Ali\'nin telefonu" nasıl denir?', options: ['Ali phone', "Ali's phone", 'the phone of Ali'], answer: 1 },
       { type: 'order', prompt_tr: 'Onun (kadın) adı Elif.', words: ['name', 'Her', 'is', 'Elif', 'His'], answer: 'Her name is Elif' },
+      { type: 'gap', sentence: 'They have a car. ___ car is new.', options: ['Their', 'They', 'Them'], answer: 0 },
+      { type: 'gap', sentence: 'He is a doctor. ___ name is Can.', options: ['Her', 'His', 'He'], answer: 1 },
+      { type: 'mc', prompt: '"Elif\'in telefonu" nasıl denir?', options: ['Elif phone', "Elif's phone", 'Elifs phone'], answer: 1, explanation_tr: "İsimle iyelik için 's." },
+      { type: 'order', prompt_tr: 'Bizim evimiz küçük.', words: ['Our', 'house', 'is', 'small', 'We'], answer: 'Our house is small' },
     ],
     quiz: [
       {
@@ -350,6 +586,59 @@ export const LESSONS_A11: Lesson[] = [
           { text: 'They parents are in Izmir', tag: 'POSS', explanation_tr: '"onların" = their.' },
           { text: 'Their parents is in Izmir', tag: 'TOBE', explanation_tr: 'Çoğul + are.' },
           { text: 'Their parents are Izmir', tag: 'PREP', explanation_tr: 'Şehir için "in": in Izmir.' },
+        ],
+      },
+      {
+        id: 'q_poss_6', mode: 'order', prompt_tr: 'Onun (kadın) arabası beyaz.', answer_en: 'Her car is white',
+        words: ['Her', 'car', 'is', 'white', 'His', 'She'],
+        error_variants: [
+          { text: 'His car is white', tag: 'GEN', explanation_tr: 'Kadın → her.' },
+          { text: 'She car is white', tag: 'POSS', explanation_tr: '"onun" (kadın) = her.' },
+        ],
+      },
+      {
+        id: 'q_poss_7', mode: 'free', prompt_tr: 'Benim adım Mehmet.', answer_en: 'My name is Mehmet', accepted: ["My name's Mehmet", 'I am Mehmet', "I'm Mehmet"],
+        error_variants: [
+          { text: 'Me name is Mehmet', tag: 'POSS', explanation_tr: '"benim" = my.' },
+          { text: 'My name Mehmet', tag: 'TOBE', explanation_tr: '"is" eksik: My name is Mehmet.' },
+        ],
+      },
+      {
+        id: 'q_poss_8', mode: 'order', prompt_tr: 'Onların evi büyük.', answer_en: 'Their house is big',
+        words: ['Their', 'house', 'is', 'big', 'They', 'are'],
+        error_variants: [
+          { text: 'They house is big', tag: 'POSS', explanation_tr: '"onların" = their.' },
+          { text: 'Their house are big', tag: 'TOBE', explanation_tr: '"house" tekil → is.' },
+        ],
+      },
+      {
+        id: 'q_poss_9', mode: 'free', prompt_tr: "Ali'nin işi zor.", answer_en: "Ali's job is hard", accepted: ["Ali's job is difficult"],
+        error_variants: [
+          { text: 'Ali job is hard', tag: 'POSS', explanation_tr: "İsimle iyelik için 's: Ali's job." },
+          { text: "Ali's job hard", tag: 'TOBE', explanation_tr: '"is" eksik.' },
+        ],
+      },
+      {
+        id: 'q_poss_10', mode: 'order', prompt_tr: 'Senin telefonun yeni.', answer_en: 'Your phone is new',
+        words: ['Your', 'phone', 'is', 'new', 'You', 'are'],
+        error_variants: [
+          { text: 'You phone is new', tag: 'POSS', explanation_tr: '"senin" = your.' },
+          { text: 'Your phone new', tag: 'TOBE', explanation_tr: '"is" eksik.' },
+        ],
+      },
+      {
+        id: 'q_poss_11', mode: 'free', prompt_tr: 'Öğretmenimiz İzmirli.', answer_en: 'Our teacher is from Izmir',
+        error_variants: [
+          { text: 'We teacher is from Izmir', tag: 'POSS', explanation_tr: '"bizim" = our.' },
+          { text: 'Our teacher from Izmir', tag: 'TOBE', explanation_tr: '"is" eksik.' },
+        ],
+      },
+      {
+        id: 'q_poss_12', mode: 'order', prompt_tr: 'Kız kardeşimin adı Zeynep.', answer_en: "My sister's name is Zeynep",
+        words: ['My', "sister's", 'name', 'is', 'Zeynep', 'sister', 'her'],
+        error_variants: [
+          { text: 'My sister name is Zeynep', tag: 'POSS', explanation_tr: "İsimle iyelik için 's: my sister's name." },
+          { text: "My sister's name Zeynep", tag: 'TOBE', explanation_tr: '"is" eksik.' },
         ],
       },
     ],

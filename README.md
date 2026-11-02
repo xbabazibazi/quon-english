@@ -1,9 +1,9 @@
-# Günde10 — Günde 10 dakika İngilizce
+# QUON English — Türkler için İngilizce
 
-Türkçe konuşanlar için **tamamen ücretsiz**, reklam destekli, günde 10 dakikalık İngilizce uygulaması (PWA).
+Türkçe konuşanlar için **tamamen ücretsiz**, A1'den B2'ye İngilizce kursu (PWA): dilbilgisi, kelime, okuma/dinleme, konuşma senaryoları. Süre sınırı yok. Bir QUON SOFT ürünüdür.
 Kalp yok, kilit yok. Hataları Türkçe anlatır. Çalışma anında AI yok: tüm içerik önceden üretilir, seans **internetsiz** çalışır.
 
-**Demo sürüm (v0.1):** A1.1–A1.2 seviyesinde 10 ders, seviye testi, 5 adımlı günlük seans, FSRS aralıklı tekrar, seri/XP, Türkçe hata modeli (20 etiket), hata haritası.
+**Sürüm v0.3:** A1.1–B2.1 seviyesinde 50 ders (her biri 10 alıştırma + 12 soruluk havuz), seviye testi, A1–B2 arası yaklaşık 2.800 kelime (Türkçeden İngilizceye yazarak FSRS tekrar), 30 seviyeli okuma metni (dinleme + dikte), 16 konuşma senaryosu (cihazda kayıt), Türkçe hata modeli (51 etiket), hata haritası. Ses cihazın kendi İngilizce sesiyle çalınır. Ücretli altyapı `src/billing.ts` içinde hazır ama kapalı (`BILLING_ENABLED = false`, `ADS_ENABLED = false`).
 
 ## Çalıştırma
 

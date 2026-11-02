@@ -1,7 +1,5 @@
 import { LESSON_BY_SKILL, LESSON_MAP, SKILLS, SKILL_MAP, SUBLEVELS } from '../content'
 import type { Exercise, Lesson, QuizItem, ErrorTag } from '../content'
-import type { CardEntry } from '../store'
-import { isDue } from './srs'
 import { shuffle } from './match'
 
 export interface SessionPlan {
@@ -9,7 +7,6 @@ export interface SessionPlan {
   skillId: string
   /** Kullanıcı bu beceriyi zaten biliyor ama tekrar ediyor */
   isReinforcement: boolean
-  warmup: CardEntry[]
   exercises: Exercise[]
   quiz: QuizItem[]
   reason: string
@@ -17,15 +14,16 @@ export interface SessionPlan {
 
 interface PlanInput {
   skillMastery: Record<string, number>
-  cards: Record<string, CardEntry>
   topErrorTags: ErrorTag[]
   learnedLessonIds: string[]
   now?: Date
 }
 
 const MASTERED = 0.6
+const EXERCISES = 8
+const QUIZ = 8
 
-/** Saf kod: bugün ne çalışılacağına karar verir. LLM çağrısı yok, çevrimdışı çalışır. */
+/** Saf kod: sıradaki dersi seçer. LLM çağrısı yok, çevrimdışı çalışır. */
 export function buildPlan(input: PlanInput): SessionPlan {
   const now = input.now ?? new Date()
   const m = (id: string) => input.skillMastery[id] ?? 0
@@ -65,26 +63,20 @@ export function buildPlan(input: PlanInput): SessionPlan {
   }
   const lesson = LESSON_BY_SKILL[skill.id]
 
-  // 2) Isınma: vadesi gelmiş kartlar, en fazla 8
-  const warmup = Object.values(input.cards)
-    .filter((c) => isDue(c.srs, now))
-    .sort((a, b) => new Date(a.srs.due).getTime() - new Date(b.srs.due).getTime())
-    .slice(0, 8)
+  // 2) Alıştırma ve sınav havuzdan karışık seçilir: tekrar eden seanslarda cümleler değişir
+  const seed = (now.getTime() % 1e9) / 1e9
+  const exercises = shuffle(lesson.exercises, seed).slice(0, EXERCISES)
 
-  // 3) Alıştırma: dersin havuzu (en fazla 6)
-  const exercises = lesson.exercises.slice(0, 6)
-
-  // 4) Günün sınavı: 3 bugünden + 2 önceki derslerden (en sık hata etiketini hedefleyen), yoksa 5 bugünden
-  const seed = now.getTime() / 1e9
-  const today = shuffle(lesson.quiz, seed)
-  let quiz: QuizItem[] = today.slice(0, 5)
+  // 3) Sınav: bu dersten + önceki derslerden en sık hata etiketini hedefleyen 2 soru
+  const today = shuffle(lesson.quiz, seed + 0.1)
+  let quiz: QuizItem[] = today.slice(0, QUIZ)
   const others = input.learnedLessonIds
     .filter((id) => id !== lesson.id && LESSON_MAP[id])
     .flatMap((id) => LESSON_MAP[id].quiz)
     .filter((q) => q.error_variants.some((v) => input.topErrorTags.includes(v.tag)))
   if (others.length >= 2 && input.topErrorTags.length) {
-    quiz = [...today.slice(0, 3), ...shuffle(others, seed + 1).slice(0, 2)]
+    quiz = [...today.slice(0, QUIZ - 2), ...shuffle(others, seed + 0.2).slice(0, 2)]
   }
 
-  return { lesson, skillId: skill.id, isReinforcement, warmup, exercises, quiz, reason }
+  return { lesson, skillId: skill.id, isReinforcement, exercises, quiz, reason }
 }

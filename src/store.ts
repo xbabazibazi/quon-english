@@ -1,11 +1,12 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import type { Cefr, ErrorTag, Lesson } from './content'
+import type { Cefr, ErrorTag, Goal, Lesson, VocabItem } from './content'
 import { SKILLS, SUBLEVELS } from './content'
 import { isMature, newCard, review, reviveCard, type Grade, type SrsCard } from './engine/srs'
-import { dateKey, daysBetween, monthKey } from './engine/dates'
+import { dateKey } from './engine/dates'
+import { FREE_ENTITLEMENT, type Entitlement } from './billing'
 
-export type Goal = 'work' | 'travel' | 'exam' | 'general'
+export type { Goal }
 export type Sublevel = (typeof SUBLEVELS)[number]
 
 export interface Profile {
@@ -13,9 +14,8 @@ export interface Profile {
   goal: Goal
   cefr: Cefr
   sublevel: Sublevel
-  dailyGoal: 1 | 2
   createdAt: string
-  levelTestScore?: { A1: number; A2: number; B1: number }
+  levelTestScore?: { A1: number; A2: number; B1: number; B2: number }
 }
 
 export interface CardEntry {
@@ -24,7 +24,9 @@ export interface CardEntry {
   back_tr: string
   example: string
   example_tr: string
+  /** Dersten gelen kartta ders id'si, kelime omurgasından gelende 'vocab' */
   lessonId: string
+  accepted?: string[]
   srs: SrsCard
 }
 
@@ -45,16 +47,23 @@ export interface SessionRecord {
   total: number
   errors: ErrorEvent[]
   completedAt: string
-  kind: 'daily' | 'second' | 'weekly'
 }
 
-export interface Streak {
-  current: number
-  longest: number
-  lastActiveDate: string | null
-  freezesLeft: number
-  freezeMonth: string
+const STORAGE_KEY = 'quon-english-v1'
+const LEGACY_STORAGE_KEY = 'gunde10-v1'
+
+// Uygulamanın eski adıyla (Günde10) kaydedilmiş ilerlemeyi bir kez yeni anahtara taşı
+try {
+  const legacy = localStorage.getItem(LEGACY_STORAGE_KEY)
+  if (legacy && !localStorage.getItem(STORAGE_KEY)) localStorage.setItem(STORAGE_KEY, legacy)
+  if (legacy) localStorage.removeItem(LEGACY_STORAGE_KEY)
+} catch {
+  // depolama kapalıysa (gizli mod vb.) taşınacak bir şey de yoktur
 }
+
+export const XP_READING = 20
+export const XP_SCENARIO = 30
+export const XP_NEW_WORDS = 10
 
 interface State {
   profile: Profile
@@ -63,13 +72,20 @@ interface State {
   sessions: SessionRecord[]
   errorCounts: Partial<Record<ErrorTag, number>>
   totalXp: number
-  streak: Streak
+  /** okuma id → son anlama puanı (0-1) */
+  readings: Record<string, number>
+  /** senaryo id → tamamlanma tarihi */
+  scenarios: Record<string, string>
+  entitlement: Entitlement
   // actions
+  setEntitlement: (e: Entitlement) => void
   completeOnboarding: (p: Omit<Profile, 'onboarded' | 'createdAt'>) => void
-  setDailyGoal: (g: 1 | 2) => void
   reviewCard: (id: string, grade: Grade) => void
   addCardsFromLesson: (lesson: Lesson) => void
+  addVocabCards: (items: VocabItem[]) => void
   completeSession: (r: Omit<SessionRecord, 'completedAt' | 'date'>, masteryScore: number) => void
+  completeReading: (id: string, score: number) => void
+  completeScenario: (id: string) => void
   reset: () => void
 }
 
@@ -78,11 +94,8 @@ const DEFAULT_PROFILE: Profile = {
   goal: 'general',
   cefr: 'A1',
   sublevel: 'A1.1',
-  dailyGoal: 1,
   createdAt: '',
 }
-
-const DEFAULT_STREAK: Streak = { current: 0, longest: 0, lastActiveDate: null, freezesLeft: 2, freezeMonth: monthKey() }
 
 /** Seviye testinden gelen alt-seviyeye göre önceki becerilere başlangıç yeterliliği yazar. */
 function seedMastery(sublevel: Sublevel): Record<string, number> {
@@ -95,21 +108,12 @@ function seedMastery(sublevel: Sublevel): Record<string, number> {
   return m
 }
 
-function advanceStreak(s: Streak, today: string): Streak {
-  const mk = monthKey()
-  const freezesLeft = s.freezeMonth === mk ? s.freezesLeft : 2
-  if (s.lastActiveDate === today) return { ...s, freezesLeft, freezeMonth: mk }
-  let current = 1
-  let left = freezesLeft
-  if (s.lastActiveDate) {
-    const gap = daysBetween(s.lastActiveDate, today)
-    if (gap === 1) current = s.current + 1
-    else if (gap === 2 && left > 0) {
-      current = s.current + 1
-      left -= 1
-    }
-  }
-  return { current, longest: Math.max(s.longest, current), lastActiveDate: today, freezesLeft: left, freezeMonth: mk }
+/** Alt seviyedeki tüm beceriler öğrenildiyse sıradaki alt seviyeye geçirir. */
+function advanceLevel(profile: Profile, mastery: Record<string, number>): Profile {
+  let idx = SUBLEVELS.indexOf(profile.sublevel)
+  while (idx < SUBLEVELS.length - 1 && SKILLS.filter((k) => k.sublevel === SUBLEVELS[idx]).every((k) => (mastery[k.id] ?? 0) >= 0.6)) idx++
+  const sublevel = SUBLEVELS[idx]
+  return { ...profile, sublevel, cefr: sublevel.slice(0, 2) as Cefr }
 }
 
 export const useStore = create<State>()(
@@ -121,15 +125,17 @@ export const useStore = create<State>()(
       sessions: [],
       errorCounts: {},
       totalXp: 0,
-      streak: DEFAULT_STREAK,
+      readings: {},
+      scenarios: {},
+      entitlement: FREE_ENTITLEMENT,
+
+      setEntitlement: (e) => set({ entitlement: e }),
 
       completeOnboarding: (p) =>
         set({
           profile: { ...p, onboarded: true, createdAt: new Date().toISOString() },
           skillMastery: seedMastery(p.sublevel),
         }),
-
-      setDailyGoal: (g) => set((s) => ({ profile: { ...s.profile, dailyGoal: g } })),
 
       reviewCard: (id, grade) =>
         set((s) => {
@@ -150,28 +156,46 @@ export const useStore = create<State>()(
           return { cards }
         }),
 
+      addVocabCards: (items) =>
+        set((s) => {
+          const cards = { ...s.cards }
+          for (const v of items) {
+            const id = `v:${v.id}`
+            if (!cards[id]) {
+              cards[id] = { id, front: v.en, back_tr: v.tr, example: v.example, example_tr: v.example_tr, lessonId: 'vocab', accepted: v.accepted, srs: newCard() }
+            }
+          }
+          return { cards, totalXp: s.totalXp + XP_NEW_WORDS }
+        }),
+
       completeSession: (r, masteryScore) =>
         set((s) => {
-          const today = dateKey()
           const old = s.skillMastery[r.skillId] ?? 0
           const mastery = masteryScore >= old ? old * 0.3 + masteryScore * 0.7 : old * 0.5 + masteryScore * 0.5
           const errorCounts = { ...s.errorCounts }
           for (const e of r.errors) errorCounts[e.tag] = (errorCounts[e.tag] ?? 0) + 1
-          const record: SessionRecord = { ...r, date: today, completedAt: new Date().toISOString() }
+          const record: SessionRecord = { ...r, date: dateKey(), completedAt: new Date().toISOString() }
+          const skillMastery = { ...s.skillMastery, [r.skillId]: Math.min(1, mastery) }
           return {
+            profile: advanceLevel(s.profile, skillMastery),
             sessions: [...s.sessions, record],
-            skillMastery: { ...s.skillMastery, [r.skillId]: Math.min(1, mastery) },
+            skillMastery,
             errorCounts,
             totalXp: s.totalXp + r.xp,
-            streak: advanceStreak(s.streak, today),
           }
         }),
 
+      completeReading: (id, score) =>
+        set((s) => ({ readings: { ...s.readings, [id]: Math.max(score, s.readings[id] ?? 0) }, totalXp: s.totalXp + XP_READING })),
+
+      completeScenario: (id) => set((s) => ({ scenarios: { ...s.scenarios, [id]: dateKey() }, totalXp: s.totalXp + XP_SCENARIO })),
+
+      // entitlement bilerek sıfırlanmaz: ilerlemeyi silmek satın alımı silmemeli
       reset: () =>
-        set({ profile: DEFAULT_PROFILE, skillMastery: {}, cards: {}, sessions: [], errorCounts: {}, totalXp: 0, streak: DEFAULT_STREAK }),
+        set({ profile: DEFAULT_PROFILE, skillMastery: {}, cards: {}, sessions: [], errorCounts: {}, totalXp: 0, readings: {}, scenarios: {} }),
     }),
     {
-      name: 'gunde10-v1',
+      name: STORAGE_KEY,
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
         if (!state) return
@@ -182,11 +206,6 @@ export const useStore = create<State>()(
 )
 
 // ---- türetilmiş seçiciler ----
-export function selectTodaySessions(s: State): SessionRecord[] {
-  const t = dateKey()
-  return s.sessions.filter((x) => x.date === t)
-}
-
 export function selectMatureWords(s: State): number {
   return Object.values(s.cards).filter((c) => isMature(c.srs)).length
 }
